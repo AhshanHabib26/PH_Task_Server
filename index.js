@@ -20,8 +20,6 @@ const client = new MongoClient(uri, {
 });
 
 
-
-
 async function myClient() {
   try {
     await client.connect();
@@ -86,22 +84,32 @@ async function myClient() {
 
     app.get('/billing-list', async (req, res) => {
       const pageNum = parseInt(req.query.pageNum);
+      const dataSort = { name: -1 };
       const result = await billingCollection
         .find({})
         .skip(pageNum * 10)
         .limit(10)
-        .sort('-1')
+        .sort(dataSort)
         .toArray();
-       res.status(200).json({
+      res.status(200).json({
         success: true,
         result,
       });
     });
 
-
-    app.get('/totalDataCount',  async (req, res) => {
+    app.get('/totalDataCount', async (req, res) => {
       const count = await billingCollection.estimatedDocumentCount();
       res.send({ count });
+    });
+
+
+    app.get('/total-payable-amount', async (req, res) => {
+      const result = await billingCollection.find({}).toArray();
+      let totalAmount = 0;
+      result.forEach((data) => {
+        totalAmount += Number(data.paidAmount);
+      });
+      res.send({ totalAmount });
     });
 
     app.post('/add-billing', async (req, res) => {
@@ -122,16 +130,12 @@ async function myClient() {
         $set: data,
       };
       const result = await billingCollection.updateOne(query, updateDoc);
-     res.status(200).json({
+      res.status(200).json({
         success: true,
         message: 'Billing Data Update Successfully',
         result,
       });
     });
-
-
-
-
 
     app.delete('/delete-billing/:id', async (req, res) => {
       const id = req.params.id;
@@ -143,8 +147,6 @@ async function myClient() {
         result,
       });
     });
-
-
   } catch (err) {
     console.log(err);
   }
