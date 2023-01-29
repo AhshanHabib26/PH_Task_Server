@@ -1,6 +1,7 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const colors = require('colors');
+const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
 const app = express();
@@ -20,9 +21,31 @@ const client = new MongoClient(uri, {
 async function myClient() {
   try {
     await client.connect();
-   
+
     const userCollection = client.db('PH_Hack').collection('user-list');
 
+    app.post('/registration', async (req, res) => {
+      const data = req.body;
+      const result = await userCollection.insertOne(data);
+      if (result.acknowledged === true) {
+        const token = jwt.sign(data._id, process.env.ACCESS_TOKEN_SECRET);
+        return res.status(200).json({
+          success: true,
+          message: 'User Create Account Successfully',
+          token,
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: 'Something Went Wrong',
+        });
+      }
+
+      
+
+    
+
+    });
   } catch (err) {
     console.log(err);
   }
