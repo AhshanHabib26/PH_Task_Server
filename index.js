@@ -27,15 +27,7 @@ async function myClient() {
 
     app.post('/registration', async (req, res) => {
       const { email, name, password } = req.body;
-      const queryEmail = req.body.email;
-
-      const isUserExist = await userCollection.findOne({ queryEmail });
-      if (!isUserExist) {
-        return res.status(401).json({
-          success: false,
-          message: 'User Already Exsits',
-        });
-      }
+      const query = req.body.email;
 
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(password, salt);
@@ -43,10 +35,10 @@ async function myClient() {
       const result = await userCollection.insertOne({
         email,
         name,
-        hashedPassword,
+        password: hashedPassword,
       });
       if (result.acknowledged === true) {
-        const token = jwt.sign(queryEmail, process.env.ACCESS_TOKEN_SECRET);
+        const token = jwt.sign(query, process.env.ACCESS_TOKEN_SECRET);
         return res.status(200).json({
           success: true,
           message: 'User Create Account Successfully',
@@ -60,7 +52,33 @@ async function myClient() {
       }
     });
 
-   
+    app.post('/login', async (req, res) => {
+      const data = req.body;
+      const query = { email: data.email };
+
+      if (!data.email || !data.password) {
+        return res.status(400).json({
+          success: false,
+          message: 'Please Provide an Email and Password',
+        });
+      }
+
+      const user = await userCollection.findOne(query);
+      const isMatch = await bcrypt.compare(data.password, user.password);
+      
+      if (!isMatch) {
+        return res.status(401).json({
+          success: false,
+          message: 'Invalid credentials',
+        });
+      } else {
+        const token = jwt.sign(query, process.env.ACCESS_TOKEN_SECRET);
+        return res.status(200).json({
+          success: true,
+          token,
+        });
+      }
+    });
   } catch (err) {
     console.log(err);
   }
