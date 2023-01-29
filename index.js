@@ -19,6 +19,9 @@ const client = new MongoClient(uri, {
   serverApi: ServerApiVersion.v1,
 });
 
+
+
+
 async function myClient() {
   try {
     await client.connect();
@@ -95,6 +98,12 @@ async function myClient() {
       });
     });
 
+
+    app.get('/totalDataCount',  async (req, res) => {
+      const count = await billingCollection.estimatedDocumentCount();
+      res.send({ count });
+    });
+
     app.post('/add-billing', async (req, res) => {
       const data = req.body;
       const result = await billingCollection.insertOne(data);
@@ -134,10 +143,6 @@ async function myClient() {
         result,
       });
     });
-
-
-
-
 
 
   } catch (err) {
