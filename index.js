@@ -1,6 +1,7 @@
 const express = require('express');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 const colors = require('colors');
+const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const cors = require('cors');
 require('dotenv').config();
@@ -25,10 +26,27 @@ async function myClient() {
     const userCollection = client.db('PH_Hack').collection('user-list');
 
     app.post('/registration', async (req, res) => {
-      const data = req.body;
-      const result = await userCollection.insertOne(data);
+      const { email, name, password } = req.body;
+      const queryEmail = req.body.email;
+
+      const isUserExist = await userCollection.findOne({ queryEmail });
+      if (!isUserExist) {
+        return res.status(401).json({
+          success: false,
+          message: 'User Already Exsits',
+        });
+      }
+
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+
+      const result = await userCollection.insertOne({
+        email,
+        name,
+        hashedPassword,
+      });
       if (result.acknowledged === true) {
-        const token = jwt.sign(data._id, process.env.ACCESS_TOKEN_SECRET);
+        const token = jwt.sign(queryEmail, process.env.ACCESS_TOKEN_SECRET);
         return res.status(200).json({
           success: true,
           message: 'User Create Account Successfully',
@@ -40,12 +58,9 @@ async function myClient() {
           message: 'Something Went Wrong',
         });
       }
-
-      
-
-    
-
     });
+
+   
   } catch (err) {
     console.log(err);
   }
