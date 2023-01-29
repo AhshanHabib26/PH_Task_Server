@@ -124,7 +124,16 @@ async function myClient() {
 
 
 
-
+    app.delete('/delete-billing/:id', async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: ObjectId(id) };
+      const result = await billingCollection.deleteOne(query);
+      res.status(200).json({
+        success: true,
+        message: 'Billing Data Delete Successfully',
+        result,
+      });
+    });
 
 
 
