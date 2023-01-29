@@ -1,5 +1,5 @@
 const express = require('express');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const colors = require('colors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -81,8 +81,6 @@ async function myClient() {
       }
     });
 
-
-
     app.get('/billing-list', async (req, res) => {
       const pageNum = parseInt(req.query.pageNum);
       const result = await billingCollection
@@ -91,17 +89,40 @@ async function myClient() {
         .limit(10)
         .sort('-1')
         .toArray();
-        return res.status(200).json({
-          success: true,
-          result,
-        });
+       res.status(200).json({
+        success: true,
+        result,
+      });
     });
 
     app.post('/add-billing', async (req, res) => {
       const data = req.body;
       const result = await billingCollection.insertOne(data);
-      res.send(result);
+      res.status(200).json({
+        success: true,
+        message: 'Billing Data Added Successfully',
+        result,
+      });
     });
+
+    app.put('/update-billing/:id', async (req, res) => {
+      const id = req.params.id;
+      const data = req.body;
+      const query = { _id: ObjectId(id) };
+      const updateDoc = {
+        $set: data,
+      };
+      const result = await billingCollection.updateOne(query, updateDoc);
+     res.status(200).json({
+        success: true,
+        message: 'Billing Data Update Successfully',
+        result,
+      });
+    });
+
+
+
+
 
 
 
