@@ -97,6 +97,11 @@ async function myClient() {
         });
     });
 
+    app.post('/add-billing', async (req, res) => {
+      const data = req.body;
+      const result = await billingCollection.insertOne(data);
+      res.send(result);
+    });
 
 
 
