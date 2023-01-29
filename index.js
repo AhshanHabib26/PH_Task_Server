@@ -24,6 +24,7 @@ async function myClient() {
     await client.connect();
 
     const userCollection = client.db('PH_Hack').collection('user-list');
+    const billingCollection = client.db('PH_Hack').collection('billing-list');
 
     app.post('/registration', async (req, res) => {
       const { email, name, password } = req.body;
@@ -65,7 +66,7 @@ async function myClient() {
 
       const user = await userCollection.findOne(query);
       const isMatch = await bcrypt.compare(data.password, user.password);
-      
+
       if (!isMatch) {
         return res.status(401).json({
           success: false,
@@ -79,6 +80,31 @@ async function myClient() {
         });
       }
     });
+
+
+
+    app.get('/billing-list', async (req, res) => {
+      const pageNum = parseInt(req.query.pageNum);
+      const result = await billingCollection
+        .find({})
+        .skip(pageNum * 10)
+        .limit(10)
+        .sort('-1')
+        .toArray();
+        return res.status(200).json({
+          success: true,
+          result,
+        });
+    });
+
+
+
+
+
+
+
+
+
   } catch (err) {
     console.log(err);
   }
