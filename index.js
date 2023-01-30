@@ -44,6 +44,13 @@ async function myClient() {
     const userCollection = client.db('PH_Hack').collection('user-list');
     const billingCollection = client.db('PH_Hack').collection('billing-list');
 
+    app.get('/', async (req, res) =>{
+      res.send('Welcome Power Hack Server!')
+    })
+
+
+
+
     app.post('/registration', async (req, res) => {
       const { email, name, password } = req.body;
       const query = req.body.email;
@@ -163,13 +170,6 @@ async function myClient() {
         result,
       });
     });
-
-
-    app.get('/', (req, res) =>{
-      res.send('Welcome Power Hack Server!')
-    })
-
-
 
   } catch (err) {
     console.log(err);
