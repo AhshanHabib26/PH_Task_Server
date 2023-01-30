@@ -20,6 +20,23 @@ const client = new MongoClient(uri, {
 });
 
 
+function protectRoute(req, res, next) {
+  const header = req.headers.authorization;
+  if (!header) {
+    return res.send('Not Authorized to Access This Route');
+  }
+  const token = header.split(' ')[1];
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decode) => {
+    if (err) {
+      res.send('UnAuthorized Access');
+    } else {
+      req.decode = decode;
+      next();
+    }
+  });
+}
+
+
 async function myClient() {
   try {
     await client.connect();
@@ -82,7 +99,7 @@ async function myClient() {
       }
     });
 
-    app.get('/billing-list', async (req, res) => {
+    app.get('/billing-list', protectRoute, async (req, res) => {
       const pageNum = parseInt(req.query.pageNum);
       const dataSort = { name: -1 };
       const result = await billingCollection
@@ -97,13 +114,12 @@ async function myClient() {
       });
     });
 
-    app.get('/totalDataCount', async (req, res) => {
+    app.get('/totalDataCount', protectRoute, async (req, res) => {
       const count = await billingCollection.estimatedDocumentCount();
       res.send({ count });
     });
 
-
-    app.get('/total-payable-amount', async (req, res) => {
+    app.get('/total-payable-amount', protectRoute,  async (req, res) => {
       const result = await billingCollection.find({}).toArray();
       let totalAmount = 0;
       result.forEach((data) => {
@@ -112,7 +128,7 @@ async function myClient() {
       res.send({ totalAmount });
     });
 
-    app.post('/add-billing', async (req, res) => {
+    app.post('/add-billing', protectRoute, async (req, res) => {
       const data = req.body;
       const result = await billingCollection.insertOne(data);
       res.status(200).json({
@@ -122,7 +138,7 @@ async function myClient() {
       });
     });
 
-    app.put('/update-billing/:id', async (req, res) => {
+    app.put('/update-billing/:id', protectRoute,  async (req, res) => {
       const id = req.params.id;
       const data = req.body;
       const query = { _id: ObjectId(id) };
@@ -137,7 +153,7 @@ async function myClient() {
       });
     });
 
-    app.delete('/delete-billing/:id', async (req, res) => {
+    app.delete('/delete-billing/:id', protectRoute,  async (req, res) => {
       const id = req.params.id;
       const query = { _id: ObjectId(id) };
       const result = await billingCollection.deleteOne(query);
