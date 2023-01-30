@@ -163,6 +163,14 @@ async function myClient() {
         result,
       });
     });
+
+
+    app.get('/', (req, res) =>{
+      res.send('Welcome Power Hack Server!')
+    })
+
+
+
   } catch (err) {
     console.log(err);
   }
